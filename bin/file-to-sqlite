@@ -1,0 +1,31 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * @file
+ * The file-to-sqlite cli command.
+ */
+
+use Consolidation\AnnotatedCommand\AnnotatedCommandFactory;
+use Shiyan\FileToSqlite\FileToSqlite;
+use Symfony\Component\Console\Application;
+
+$autoloaders[] = __DIR__ . '/../vendor/autoload.php';
+$autoloaders[] = __DIR__ . '/../../../autoload.php';
+
+foreach ($autoloaders as $file) {
+  if (file_exists($file)) {
+    require_once $file;
+    break;
+  }
+}
+
+$command = new FileToSqlite();
+$factory = new AnnotatedCommandFactory();
+$app = new Application('File to SQLite');
+
+$factory->commandProcessor()->setPassExceptions(TRUE);
+
+$app->addCommands($factory->createCommandsFromClass($command));
+$app->setDefaultCommand('file-to-sqlite', TRUE);
+$app->run();

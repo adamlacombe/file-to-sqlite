@@ -1,0 +1,36 @@
+{
+    "name": "shiyan/file-to-sqlite",
+    "description": "Copies data from a file to an SQLite database.",
+    "license": "MIT",
+    "require": {
+        "php": "^7.1",
+        "ext-pdo_sqlite": "*",
+        "consolidation/annotated-command": "^2.8.3",
+        "shiyan/iterator-regex": "^1.0.1",
+        "shiyan/lite-sql-insert": "^2.0.1",
+        "symfony/console": "^4.0",
+        "symfony/filesystem": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shiyan\\FileToSqlite\\": "src/"
+        }
+    },
+    "bin": [
+        "bin/file-to-sqlite"
+    ],
+    "keywords": ["regex", "file", "sqlite", "php", "oop", "console"],
+    "support": {
+        "source": "https://github.com/mikeshiyan/file-to-sqlite",
+        "issues": "https://github.com/mikeshiyan/file-to-sqlite/issues"
+    },
+    "authors": [
+        {
+            "name": "Mike Shiyan",
+            "homepage": "https://github.com/mikeshiyan"
+        }
+    ],
+    "suggest": {
+        "consolidation/cgr": "Isolates the composer library from other globally-installed tools"
+    }
+}
