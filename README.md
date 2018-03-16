@@ -38,6 +38,7 @@ pattern            Regular expression pattern with named subpatterns.
 
 ##### Options:
 ```
+--table=TABLE      Table name. By default, the source file name is used.
 --integer=INTEGER  List of integer fields. (multiple values allowed)
 --blob=BLOB        List of blob fields. (multiple values allowed)
 --real=REAL        List of real fields. (multiple values allowed)

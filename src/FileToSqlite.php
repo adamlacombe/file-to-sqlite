@@ -16,6 +16,7 @@ class FileToSqlite {
    * Option default values.
    */
   protected const OPTION_DEFAULT_VALUES = [
+    'table' => InputOption::VALUE_REQUIRED,
     'integer' => [],
     'blob' => [],
     'real' => [],
@@ -35,6 +36,8 @@ class FileToSqlite {
    * @param string $pattern
    *   Regular expression pattern with named subpatterns.
    *
+   * @option $table
+   *   Table name. By default, the source file name is used.
    * @option $integer
    *   List of integer fields.
    * @option $blob

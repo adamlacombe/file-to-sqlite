@@ -85,12 +85,10 @@ class FileToSqlite extends BaseScenario {
    * @param string $pattern
    *   Regular expression pattern with named subpatterns.
    * @param array $options
-   *   (optional) Options array with elements:
-   *   - integer: Indexed array with names of integer fields.
-   *   - blob: Indexed array with names of blob fields.
-   *   - real: Indexed array with names of real fields.
-   *   - numeric: Indexed array with names of numeric fields.
-   *   - primary: Name of the primary key field.
+   *   (optional) Options array. See \Shiyan\FileToSqlite\FileToSqlite::run()
+   *   for possible elements.
+   *
+   * @see \Shiyan\FileToSqlite\FileToSqlite::run()
    */
   public function __construct(OutputInterface $output, string $source, string $destination, string $pattern, array $options = []) {
     $file = new \SplFileObject($source, 'rb');
@@ -123,7 +121,11 @@ class FileToSqlite extends BaseScenario {
    * {@inheritdoc}
    */
   protected function getTable(): string {
-    return 'main';
+    /** @var \SplFileObject $source */
+    $source = $this->getIterator();
+    $filename = pathinfo($source->getFileInfo(), PATHINFO_FILENAME);
+
+    return $this->getOption('table', $filename);
   }
 
   /**
