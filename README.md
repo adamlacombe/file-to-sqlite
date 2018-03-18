@@ -31,20 +31,20 @@ file-to-sqlite [options] [--] <source> <destination> <pattern>
 
 ##### Arguments:
 ```
-source             Path to the source file.
-destination        Path to the SQLite database file. If not exists, it will be
-                   created.
-pattern            Regular expression pattern with named subpatterns.
+source                 Path to the source file.
+destination            Path to the SQLite database file. If not exists, it will
+                       be created.
+pattern                Regular expression pattern with named subpatterns.
 ```
 
 ##### Options:
 ```
---table=TABLE      Table name. By default, the source file name is used.
---integer=INTEGER  List of integer fields. (multiple values allowed)
---blob=BLOB        List of blob fields. (multiple values allowed)
---real=REAL        List of real fields. (multiple values allowed)
---numeric=NUMERIC  List of numeric fields. (multiple values allowed)
---primary=PRIMARY  Primary key.
---append           If the table exists, this option allows to insert into it
-                   anyway.
+-t, --table=TABLE      Table name. By default, the source file name is used.
+-i, --integer=INTEGER  List of integer fields. (multiple values allowed)
+    --blob=BLOB        List of blob fields. (multiple values allowed)
+    --real=REAL        List of real fields. (multiple values allowed)
+    --numeric=NUMERIC  List of numeric fields. (multiple values allowed)
+-p, --primary=PRIMARY  Primary key.
+-a, --append           If the table exists, this option allows to insert into it
+                       anyway.
 ```

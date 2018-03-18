@@ -16,13 +16,13 @@ class FileToSqlite {
    * Option default values.
    */
   protected const OPTION_DEFAULT_VALUES = [
-    'table' => InputOption::VALUE_REQUIRED,
-    'integer' => [],
+    'table|t' => InputOption::VALUE_REQUIRED,
+    'integer|i' => [],
     'blob' => [],
     'real' => [],
     'numeric' => [],
-    'primary' => InputOption::VALUE_REQUIRED,
-    'append' => FALSE,
+    'primary|p' => InputOption::VALUE_REQUIRED,
+    'append|a' => FALSE,
   ];
 
   /**
