@@ -22,6 +22,7 @@ class FileToSqlite {
     'real' => [],
     'numeric' => [],
     'primary' => InputOption::VALUE_REQUIRED,
+    'append' => FALSE,
   ];
 
   /**
@@ -32,7 +33,7 @@ class FileToSqlite {
    * @param string $source
    *   Path to the source file.
    * @param string $destination
-   *   Path to where to create an SQLite database.
+   *   Path to the SQLite database file. If not exists, it will be created.
    * @param string $pattern
    *   Regular expression pattern with named subpatterns.
    *
@@ -48,6 +49,8 @@ class FileToSqlite {
    *   List of numeric fields.
    * @option $primary
    *   Primary key.
+   * @option $append
+   *   If the table exists, this option allows to insert into it anyway.
    */
   public function run(OutputInterface $output, string $source, string $destination, string $pattern, array $options = self::OPTION_DEFAULT_VALUES): void {
     $scenario = new Scenario($output, $source, $destination, $pattern, $options);

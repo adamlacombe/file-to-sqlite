@@ -9,6 +9,7 @@ use Shiyan\LiteSqlInsert\ConnectionInterface;
 use Shiyan\LiteSqlInsert\IteratorRegex\Scenario\InsertNamedMatchTrait;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Exception\InvalidOptionException;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -46,6 +47,13 @@ class FileToSqlite extends BaseScenario {
   protected $destination;
 
   /**
+   * Indicates whether the $destination file exists.
+   *
+   * @var bool
+   */
+  protected $destinationExists;
+
+  /**
    * Filesystem utility class instance.
    *
    * @var \Symfony\Component\Filesystem\Filesystem
@@ -74,6 +82,13 @@ class FileToSqlite extends BaseScenario {
   protected $pattern;
 
   /**
+   * Table name.
+   *
+   * @var string
+   */
+  protected $table;
+
+  /**
    * FileToSqlite constructor.
    *
    * @param \Symfony\Component\Console\Output\OutputInterface $output
@@ -81,7 +96,7 @@ class FileToSqlite extends BaseScenario {
    * @param string $source
    *   Path to the file with a source data.
    * @param string $destination
-   *   Path to where to create an SQLite database.
+   *   Path to the SQLite database file. If not exists, it will be created.
    * @param string $pattern
    *   Regular expression pattern with named subpatterns.
    * @param array $options
@@ -121,11 +136,17 @@ class FileToSqlite extends BaseScenario {
    * {@inheritdoc}
    */
   protected function getTable(): string {
-    /** @var \SplFileObject $source */
-    $source = $this->getIterator();
-    $filename = pathinfo($source->getFileInfo(), PATHINFO_FILENAME);
+    if (!isset($this->table)) {
+      $this->table = $this->getOption('table');
 
-    return $this->getOption('table', $filename);
+      if (!isset($this->table)) {
+        /** @var \SplFileObject $source */
+        $source = $this->getIterator();
+        $this->table = pathinfo($source->getFileInfo(), PATHINFO_FILENAME);
+      }
+    }
+
+    return $this->table;
   }
 
   /**
@@ -154,22 +175,34 @@ class FileToSqlite extends BaseScenario {
    * Validates destination path.
    *
    * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
-   *   If the destination path already exists or cannot be created.
+   *   If the destination exists and it's not a writable file or if it cannot be
+   *   created.
    */
   protected function validateDestination(): void {
     $destination = new \SplFileInfo($this->destination);
+    $real_path = $destination->getRealPath();
+    $this->destinationExists = $real_path !== FALSE;
 
-    if ($destination->getRealPath() !== FALSE) {
-      throw new InvalidArgumentException($destination . ' already exists.');
+    if ($this->destinationExists) {
+      $this->destination = $real_path;
+      $destination = new \SplFileInfo($this->destination);
+
+      if (!$destination->isFile()) {
+        throw new InvalidArgumentException($destination . ' is not a file.');
+      }
+      if (!$destination->isWritable()) {
+        throw new InvalidArgumentException($destination . ' is not writable.');
+      }
     }
+    else {
+      $parent = $destination->getPathInfo();
 
-    $parent = $destination->getPathInfo();
-
-    if (!$parent->isDir()) {
-      throw new InvalidArgumentException($parent . ' is not a directory.');
-    }
-    if (!$parent->isWritable()) {
-      throw new InvalidArgumentException($parent . ' is not writable.');
+      if (!$parent->isDir()) {
+        throw new InvalidArgumentException($parent . ' is not a directory.');
+      }
+      if (!$parent->isWritable()) {
+        throw new InvalidArgumentException($parent . ' is not writable.');
+      }
     }
   }
 
@@ -213,6 +246,22 @@ class FileToSqlite extends BaseScenario {
   }
 
   /**
+   * Checks if the table exists in the DB.
+   *
+   * @return bool
+   *   Whether the table exists or not.
+   */
+  protected function tableExists(): bool {
+    $sql = 'SELECT 1 FROM sqlite_master WHERE type = :type AND name = :name';
+    $args = [':type' => 'table', ':name' => $this->getTable()];
+
+    $statement = $this->getConnection()->prepare($sql);
+    $this->getConnection()->executeStatement($statement, $args);
+
+    return (bool) $statement->fetchColumn();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preRun(): void {
@@ -220,6 +269,9 @@ class FileToSqlite extends BaseScenario {
     $this->validateFields();
 
     $this->dbFile = $this->filesystem->tempnam(sys_get_temp_dir(), 'file-to-sqlite-');
+    if ($this->destinationExists) {
+      $this->filesystem->copy($this->destination, $this->dbFile, TRUE);
+    }
 
     $pdo = new \PDO('sqlite:' . $this->dbFile);
     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -231,27 +283,32 @@ class FileToSqlite extends BaseScenario {
     $pdo->exec('PRAGMA synchronous = OFF');
     $pdo->exec('PRAGMA journal_mode = OFF');
 
-    $names = $this->getFields();
-    $fields = array_combine($names, $names);
+    $this->connection = new Connection($pdo);
 
-    foreach ($names as $field) {
-      foreach (['integer', 'blob', 'real', 'numeric'] as $type) {
-        if (in_array($field, $this->getOption($type, []))) {
-          $fields[$field] .= ' ' . strtoupper($type);
-          continue 2;
+    if (!$this->destinationExists || !$this->tableExists()) {
+      $names = $this->getFields();
+      $fields = array_combine($names, $names);
+
+      foreach ($names as $field) {
+        foreach (['integer', 'blob', 'real', 'numeric'] as $type) {
+          if (in_array($field, $this->getOption($type, []))) {
+            $fields[$field] .= ' ' . strtoupper($type);
+            continue 2;
+          }
         }
+
+        $fields[$field] .= ' TEXT';
       }
 
-      $fields[$field] .= ' TEXT';
+      if ($field = $this->getOption('primary')) {
+        $fields[$field] .= ' PRIMARY KEY';
+      }
+
+      $pdo->exec('CREATE TABLE ' . $this->getTable() . ' (' . implode(', ', $fields) . ')');
     }
-
-    if ($field = $this->getOption('primary')) {
-      $fields[$field] .= ' PRIMARY KEY';
+    elseif (!$this->getOption('append')) {
+      throw new RuntimeException('Table exists in the destination database. To insert into existing table, use the "--append" option.');
     }
-
-    $pdo->exec('CREATE TABLE ' . $this->getTable() . ' (' . implode(', ', $fields) . ')');
-
-    $this->connection = new Connection($pdo);
 
     $this->insertPreRun();
     $this->progressPreRun();
@@ -265,7 +322,7 @@ class FileToSqlite extends BaseScenario {
     $this->progressPostRun();
     $this->insert = NULL;
     $this->connection = NULL;
-    $this->filesystem->rename($this->dbFile, $this->destination);
+    $this->filesystem->rename($this->dbFile, $this->destination, $this->destinationExists);
   }
 
 }
