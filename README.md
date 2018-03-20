@@ -1,6 +1,9 @@
 # File to SQLite
 
-A command-line utility for copying data from a file to an SQLite database.
+A command-line utility for copying data from a file to an SQLite database file
+using regular expressions.
+
+Perfect for converting automatic log files, reports, etc.
 
 ## Requirements
 

@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Copies data from a file to an SQLite database.
+ * Provides console commands.
  */
 class FileToSqlite {
 

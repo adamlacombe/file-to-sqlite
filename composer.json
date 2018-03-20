@@ -1,6 +1,6 @@
 {
     "name": "shiyan/file-to-sqlite",
-    "description": "Copies data from a file to an SQLite database.",
+    "description": "Copies data from a file to an SQLite database using regular expressions.",
     "license": "MIT",
     "require": {
         "php": "^7.1",
