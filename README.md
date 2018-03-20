@@ -44,7 +44,7 @@ pattern                Regular expression pattern with named subpatterns.
     --blob=BLOB        List of blob fields. (multiple values allowed)
     --real=REAL        List of real fields. (multiple values allowed)
     --numeric=NUMERIC  List of numeric fields. (multiple values allowed)
--p, --primary=PRIMARY  Primary key.
+-p, --primary=PRIMARY  Primary key(s). (multiple values allowed)
 -a, --append           If the table exists, this option allows to insert into it
                        anyway.
 ```

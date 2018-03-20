@@ -21,7 +21,7 @@ class FileToSqlite {
     'blob' => [],
     'real' => [],
     'numeric' => [],
-    'primary|p' => InputOption::VALUE_REQUIRED,
+    'primary|p' => [],
     'append|a' => FALSE,
   ];
 
@@ -48,7 +48,7 @@ class FileToSqlite {
    * @option $numeric
    *   List of numeric fields.
    * @option $primary
-   *   Primary key.
+   *   Primary key(s).
    * @option $append
    *   If the table exists, this option allows to insert into it anyway.
    */

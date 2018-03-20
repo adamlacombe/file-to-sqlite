@@ -225,10 +225,10 @@ class FileToSqlite extends BaseScenario {
       throw new InvalidArgumentException('Pattern must contain named subpatterns.');
     }
 
-    $primary = $this->getOption('primary');
-
-    if ($primary && !isset($fields[$primary])) {
-      throw new InvalidOptionException('The "--primary" option contains non-existent field "' . $primary . '".');
+    foreach ($this->getOption('primary', []) as $field) {
+      if (!isset($fields[$field])) {
+        throw new InvalidOptionException('The "--primary" option contains non-existent field "' . $field . '".');
+      }
     }
 
     foreach (['integer', 'blob', 'real', 'numeric'] as $type) {
@@ -300,11 +300,12 @@ class FileToSqlite extends BaseScenario {
         $fields[$field] .= ' TEXT';
       }
 
-      if ($field = $this->getOption('primary')) {
-        $fields[$field] .= ' PRIMARY KEY';
+      $primaries = implode(', ', $this->getOption('primary', []));
+      if ($primaries !== '') {
+        $primaries = ', PRIMARY KEY (' . $primaries . ')';
       }
 
-      $pdo->exec('CREATE TABLE ' . $this->getTable() . ' (' . implode(', ', $fields) . ')');
+      $pdo->exec('CREATE TABLE ' . $this->getTable() . ' (' . implode(', ', $fields) . $primaries . ')');
     }
     elseif (!$this->getOption('append')) {
       throw new RuntimeException('Table exists in the destination database. To insert into existing table, use the "--append" option.');
