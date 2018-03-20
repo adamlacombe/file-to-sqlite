@@ -89,6 +89,13 @@ class FileToSqlite extends BaseScenario {
   protected $table;
 
   /**
+   * The default field type.
+   *
+   * @var string
+   */
+  protected $defaultFieldType = 'text';
+
+  /**
    * FileToSqlite constructor.
    *
    * @param \Symfony\Component\Console\Output\OutputInterface $output
@@ -231,7 +238,7 @@ class FileToSqlite extends BaseScenario {
       }
     }
 
-    foreach (['integer', 'blob', 'real', 'numeric'] as $type) {
+    foreach (['integer', 'blob', 'real', 'numeric', 'text'] as $type) {
       foreach ($this->getOption($type, []) as $field) {
         if (!isset($fields[$field])) {
           throw new InvalidOptionException('The "--' . $type . '" option contains non-existent field "' . $field . '".');
@@ -286,19 +293,17 @@ class FileToSqlite extends BaseScenario {
     $this->connection = new Connection($pdo);
 
     if (!$this->destinationExists || !$this->tableExists()) {
-      $names = $this->getFields();
-      $fields = array_combine($names, $names);
+      $fields = array_fill_keys($this->getFields(), strtoupper($this->defaultFieldType));
 
-      foreach ($names as $field) {
-        foreach (['integer', 'blob', 'real', 'numeric'] as $type) {
-          if (in_array($field, $this->getOption($type, []))) {
-            $fields[$field] .= ' ' . strtoupper($type);
-            continue 2;
-          }
+      foreach (['integer', 'blob', 'real', 'numeric', 'text'] as $type) {
+        foreach ($this->getOption($type, []) as $field) {
+          $fields[$field] = strtoupper($type);
         }
-
-        $fields[$field] .= ' TEXT';
       }
+
+      array_walk($fields, function (&$type, $field) {
+        $type = $field . ' ' . $type;
+      });
 
       $primaries = implode(', ', $this->getOption('primary', []));
       if ($primaries !== '') {
