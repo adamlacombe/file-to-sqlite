@@ -2,8 +2,8 @@
 
 namespace Shiyan\FileToSqlite;
 
-use Shiyan\FileToSqlite\IteratorRegex\Scenario\FileToSqlite as Scenario;
-use Shiyan\IteratorRegex\IteratorRegex;
+use Shiyan\FileToSqlite\Iterate\Scenario\FileToSqlite as Scenario;
+use Shiyan\Iterate\Iterate;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -53,10 +53,17 @@ class FileToSqlite {
    *   If the table exists, this option allows to insert into it anyway.
    */
   public function run(OutputInterface $output, string $source, string $destination, string $pattern, array $options = self::OPTION_DEFAULT_VALUES): void {
-    $scenario = new Scenario($output, $source, $destination, $pattern, $options);
-    $iterator_regex = new IteratorRegex();
+    $file = new \SplFileObject($source, 'rb');
+    $file->setFlags(\SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD | \SplFileObject::SKIP_EMPTY);
 
-    $iterator_regex($scenario);
+    $scenario = new Scenario();
+    $scenario->setOutput($output)
+      ->setDestination($destination)
+      ->setPattern($pattern)
+      ->setOptions($options);
+
+    $iterate = new Iterate();
+    $iterate($file, $scenario);
   }
 
 }

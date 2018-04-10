@@ -1,22 +1,21 @@
 <?php
 
-namespace Shiyan\FileToSqlite\IteratorRegex\Scenario;
+namespace Shiyan\FileToSqlite\Iterate\Scenario;
 
-use Shiyan\IteratorRegex\Scenario\BaseScenario;
-use Shiyan\IteratorRegex\Scenario\ConsoleProgressBarTrait;
+use Shiyan\Iterate\Scenario\BaseRegexScenario;
+use Shiyan\Iterate\Scenario\ConsoleProgressBarTrait;
+use Shiyan\Iterate\Scenario\ScenarioInterface;
 use Shiyan\LiteSqlInsert\Connection;
-use Shiyan\LiteSqlInsert\ConnectionInterface;
-use Shiyan\LiteSqlInsert\IteratorRegex\Scenario\InsertNamedMatchTrait;
+use Shiyan\LiteSqlInsert\Iterate\Scenario\InsertNamedMatchTrait;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Exception\RuntimeException;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * Iterator Regex scenario to copy data from a file to an SQLite database.
+ * Regex based Iterate scenario to copy data from a file to an SQLite database.
  */
-class FileToSqlite extends BaseScenario {
+class FileToSqlite extends BaseRegexScenario {
 
   use InsertNamedMatchTrait, ConsoleProgressBarTrait {
     InsertNamedMatchTrait::preRun as protected insertPreRun;
@@ -24,13 +23,6 @@ class FileToSqlite extends BaseScenario {
     ConsoleProgressBarTrait::preRun as protected progressPreRun;
     ConsoleProgressBarTrait::postRun as protected progressPostRun;
   }
-
-  /**
-   * A ConnectionInterface instance.
-   *
-   * @var \Shiyan\LiteSqlInsert\ConnectionInterface
-   */
-  protected $connection;
 
   /**
    * Database file temporary path.
@@ -68,25 +60,11 @@ class FileToSqlite extends BaseScenario {
   protected $options;
 
   /**
-   * An OutputInterface instance.
-   *
-   * @var \Symfony\Component\Console\Output\OutputInterface
-   */
-  protected $output;
-
-  /**
    * Regular expression pattern.
    *
    * @var string
    */
   protected $pattern;
-
-  /**
-   * Table name.
-   *
-   * @var string
-   */
-  protected $table;
 
   /**
    * The default field type.
@@ -96,40 +74,51 @@ class FileToSqlite extends BaseScenario {
   protected $defaultFieldType = 'text';
 
   /**
-   * FileToSqlite constructor.
+   * Sets the destination path.
    *
-   * @param \Symfony\Component\Console\Output\OutputInterface $output
-   *   An OutputInterface instance.
-   * @param string $source
-   *   Path to the file with a source data.
    * @param string $destination
    *   Path to the SQLite database file. If not exists, it will be created.
-   * @param string $pattern
-   *   Regular expression pattern with named subpatterns.
-   * @param array $options
-   *   (optional) Options array. See \Shiyan\FileToSqlite\FileToSqlite::run()
-   *   for possible elements.
    *
-   * @see \Shiyan\FileToSqlite\FileToSqlite::run()
+   * @return $this|\Shiyan\Iterate\Scenario\ScenarioInterface
+   *   The called object.
    */
-  public function __construct(OutputInterface $output, string $source, string $destination, string $pattern, array $options = []) {
-    $file = new \SplFileObject($source, 'rb');
-    $file->setFlags(\SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD | \SplFileObject::SKIP_EMPTY);
-
-    parent::__construct($file);
-
+  public function setDestination(string $destination): ScenarioInterface {
     $this->destination = $destination;
-    $this->filesystem = new Filesystem();
-    $this->options = $options;
-    $this->output = $output;
-    $this->pattern = $pattern;
+
+    return $this;
   }
 
   /**
-   * {@inheritdoc}
+   * Sets options array.
+   *
+   * @param array $options
+   *   Associative array. See \Shiyan\FileToSqlite\FileToSqlite::run() for
+   *   possible elements.
+   *
+   * @return $this|\Shiyan\Iterate\Scenario\ScenarioInterface
+   *   The called object.
+   *
+   * @see \Shiyan\FileToSqlite\FileToSqlite::run()
    */
-  protected function getConnection(): ConnectionInterface {
-    return $this->connection;
+  public function setOptions(array $options): ScenarioInterface {
+    $this->options = $options;
+
+    return $this;
+  }
+
+  /**
+   * Sets regular expression pattern to use with regex based scenarios.
+   *
+   * @param string $pattern
+   *   The regex pattern with named subpatterns.
+   *
+   * @return $this|\Shiyan\Iterate\Scenario\ScenarioInterface
+   *   The called object.
+   */
+  public function setPattern(string $pattern): ScenarioInterface {
+    $this->pattern = $pattern;
+
+    return $this;
   }
 
   /**
@@ -147,20 +136,15 @@ class FileToSqlite extends BaseScenario {
       $this->table = $this->getOption('table');
 
       if (!isset($this->table)) {
-        /** @var \SplFileObject $source */
-        $source = $this->getIterator();
-        $this->table = pathinfo($source->getFileInfo(), PATHINFO_FILENAME);
+        $iterator = $this->getIterator();
+
+        if ($iterator instanceof \SplFileObject) {
+          $this->table = pathinfo($iterator->getFileInfo(), PATHINFO_FILENAME);
+        }
       }
     }
 
     return $this->table;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getOutput(): OutputInterface {
-    return $this->output;
   }
 
   /**
@@ -176,6 +160,20 @@ class FileToSqlite extends BaseScenario {
    */
   protected function getOption(string $name, $default = NULL) {
     return $this->options[$name] ?? $default;
+  }
+
+  /**
+   * Returns the Filesystem instance.
+   *
+   * @return \Symfony\Component\Filesystem\Filesystem
+   *   The Filesystem instance.
+   */
+  protected function getFs(): Filesystem {
+    if (!isset($this->filesystem)) {
+      $this->filesystem = new Filesystem();
+    }
+
+    return $this->filesystem;
   }
 
   /**
@@ -216,21 +214,11 @@ class FileToSqlite extends BaseScenario {
   /**
    * Validates fields.
    *
-   * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
-   *   If there are no fields in the pattern or they are duplicated.
    * @throws \Symfony\Component\Console\Exception\InvalidOptionException
    *   If options contain non-existing or repeating (type) fields.
    */
   protected function validateFields(): void {
-    $names = $this->getFields();
-    $fields = array_fill_keys($names, FALSE);
-
-    if (count($fields) != count($names)) {
-      throw new InvalidArgumentException('Subpattern names must not be duplicated.');
-    }
-    if (!$fields) {
-      throw new InvalidArgumentException('Pattern must contain named subpatterns.');
-    }
+    $fields = array_fill_keys($this->getFields(), FALSE);
 
     foreach ($this->getOption('primary', []) as $field) {
       if (!isset($fields[$field])) {
@@ -275,9 +263,9 @@ class FileToSqlite extends BaseScenario {
     $this->validateDestination();
     $this->validateFields();
 
-    $this->dbFile = $this->filesystem->tempnam(sys_get_temp_dir(), 'file-to-sqlite-');
+    $this->dbFile = $this->getFs()->tempnam(sys_get_temp_dir(), 'file-to-sqlite-');
     if ($this->destinationExists) {
-      $this->filesystem->copy($this->destination, $this->dbFile, TRUE);
+      $this->getFs()->copy($this->destination, $this->dbFile, TRUE);
     }
 
     $pdo = new \PDO('sqlite:' . $this->dbFile);
@@ -328,7 +316,7 @@ class FileToSqlite extends BaseScenario {
     $this->progressPostRun();
     $this->insert = NULL;
     $this->connection = NULL;
-    $this->filesystem->rename($this->dbFile, $this->destination, $this->destinationExists);
+    $this->getFs()->rename($this->dbFile, $this->destination, $this->destinationExists);
   }
 
 }

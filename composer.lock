@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "f2a15d5709d8a23b9aeafd9dd117e592",
+    "content-hash": "dfa0bfbcc13e4bc251ed7edb6190a81d",
     "packages": [
         {
             "name": "consolidation/annotated-command",
@@ -155,17 +155,17 @@
             "time": "2016-10-10T12:19:37+00:00"
         },
         {
-            "name": "shiyan/iterator-regex",
-            "version": "1.0.1",
+            "name": "shiyan/iterate",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/mikeshiyan/iterator-regex.git",
-                "reference": "22435af6bcfa823bb0d10af4732ef6a2a06838ee"
+                "url": "https://github.com/mikeshiyan/iterate.git",
+                "reference": "595fc2e23eead334b4f333621b2995bfe649f1f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mikeshiyan/iterator-regex/zipball/22435af6bcfa823bb0d10af4732ef6a2a06838ee",
-                "reference": "22435af6bcfa823bb0d10af4732ef6a2a06838ee",
+                "url": "https://api.github.com/repos/mikeshiyan/iterate/zipball/595fc2e23eead334b4f333621b2995bfe649f1f2",
+                "reference": "595fc2e23eead334b4f333621b2995bfe649f1f2",
                 "shasum": ""
             },
             "require": {
@@ -178,7 +178,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Shiyan\\IteratorRegex\\": "src/"
+                    "Shiyan\\Iterate\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -191,7 +191,7 @@
                     "homepage": "https://github.com/mikeshiyan"
                 }
             ],
-            "description": "Performs a regular expression match on iterator elements.",
+            "description": "Iterates iterators by a scenario.",
             "keywords": [
                 "Match",
                 "OOP",
@@ -200,20 +200,20 @@
                 "regex",
                 "scenario"
             ],
-            "time": "2017-12-03T05:17:39+00:00"
+            "time": "2018-04-08T12:34:17+00:00"
         },
         {
             "name": "shiyan/lite-sql-insert",
-            "version": "2.0.1",
+            "version": "3.0.0-beta",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mikeshiyan/lite-sql-insert.git",
-                "reference": "0f2f7355aa84a104621521d3b7bb971a6fc89a5f"
+                "reference": "7f0d04ad5a2bd73a453357fa74b8b574757decc8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mikeshiyan/lite-sql-insert/zipball/0f2f7355aa84a104621521d3b7bb971a6fc89a5f",
-                "reference": "0f2f7355aa84a104621521d3b7bb971a6fc89a5f",
+                "url": "https://api.github.com/repos/mikeshiyan/lite-sql-insert/zipball/7f0d04ad5a2bd73a453357fa74b8b574757decc8",
+                "reference": "7f0d04ad5a2bd73a453357fa74b8b574757decc8",
                 "shasum": ""
             },
             "require": {
@@ -226,7 +226,7 @@
                 "phpunit/phpunit": "^6.4"
             },
             "suggest": {
-                "shiyan/iterator-regex": "Allows inserting regex matches in iteration"
+                "shiyan/iterate": "Allows inserting in iteration"
             },
             "type": "library",
             "autoload": {
@@ -253,7 +253,7 @@
                 "php",
                 "sql"
             ],
-            "time": "2017-12-17T19:50:11+00:00"
+            "time": "2018-04-08T18:09:04+00:00"
         },
         {
             "name": "symfony/console",
@@ -547,7 +547,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "shiyan/lite-sql-insert": 10
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
