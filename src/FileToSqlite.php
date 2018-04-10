@@ -2,7 +2,7 @@
 
 namespace Shiyan\FileToSqlite;
 
-use Shiyan\FileToSqlite\Iterate\Scenario\FileToSqlite as Scenario;
+use Shiyan\FileToSqlite\Iterate\Scenario\RegexToSqlite;
 use Shiyan\Iterate\Iterate;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -56,7 +56,7 @@ class FileToSqlite {
     $file = new \SplFileObject($source, 'rb');
     $file->setFlags(\SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD | \SplFileObject::SKIP_EMPTY);
 
-    $scenario = new Scenario();
+    $scenario = new RegexToSqlite();
     $scenario->setOutput($output)
       ->setDestination($destination)
       ->setPattern($pattern)

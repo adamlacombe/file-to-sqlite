@@ -2,24 +2,23 @@
 
 namespace Shiyan\FileToSqlite\Iterate\Scenario;
 
-use Shiyan\Iterate\Scenario\BaseRegexScenario;
 use Shiyan\Iterate\Scenario\ConsoleProgressBarTrait;
 use Shiyan\Iterate\Scenario\ScenarioInterface;
 use Shiyan\LiteSqlInsert\Connection;
-use Shiyan\LiteSqlInsert\Iterate\Scenario\InsertNamedMatchTrait;
+use Shiyan\LiteSqlInsert\Iterate\Scenario\BaseInsertTrait;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * Regex based Iterate scenario to copy data from a file to an SQLite database.
+ * Defines a basic FileToSqlite feature for Iterate Scenarios.
  */
-class FileToSqlite extends BaseRegexScenario {
+trait ToSqliteTrait {
 
-  use InsertNamedMatchTrait, ConsoleProgressBarTrait {
-    InsertNamedMatchTrait::preRun as protected insertPreRun;
-    InsertNamedMatchTrait::postRun as protected insertPostRun;
+  use BaseInsertTrait, ConsoleProgressBarTrait {
+    BaseInsertTrait::preRun as protected insertPreRun;
+    BaseInsertTrait::postRun as protected insertPostRun;
     ConsoleProgressBarTrait::preRun as protected progressPreRun;
     ConsoleProgressBarTrait::postRun as protected progressPostRun;
   }
@@ -122,7 +121,12 @@ class FileToSqlite extends BaseRegexScenario {
   }
 
   /**
-   * {@inheritdoc}
+   * Gets the pattern to try to guess field names from it.
+   *
+   * This is for regex based scenarios.
+   *
+   * @return string
+   *   Regular expression pattern.
    */
   protected function getPattern(): string {
     return $this->pattern;
@@ -132,16 +136,18 @@ class FileToSqlite extends BaseRegexScenario {
    * {@inheritdoc}
    */
   protected function getTable(): string {
+    $this->table = $this->getOption('table', $this->table);
+
     if (!isset($this->table)) {
-      $this->table = $this->getOption('table');
+      $iterator = $this->getIterator();
 
-      if (!isset($this->table)) {
-        $iterator = $this->getIterator();
-
-        if ($iterator instanceof \SplFileObject) {
-          $this->table = pathinfo($iterator->getFileInfo(), PATHINFO_FILENAME);
-        }
+      if ($iterator instanceof \SplFileObject) {
+        $this->table = pathinfo($iterator->getFileInfo(), PATHINFO_FILENAME);
       }
+    }
+
+    if (!isset($this->table)) {
+      throw new \LogicException('Table name is not provided.');
     }
 
     return $this->table;
