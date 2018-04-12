@@ -307,7 +307,14 @@ trait ToSqliteTrait {
       $pdo->exec('CREATE TABLE ' . $this->getTable() . ' (' . implode(', ', $fields) . $primaries . ')');
     }
     elseif (!$this->getOption('append')) {
-      throw new RuntimeException('Table exists in the destination database. To insert into existing table, use the "--append" option.');
+      $message = 'Table exists in the destination database.';
+
+      // Check whether the table is "appendable".
+      if ($this->getOption('append') === FALSE) {
+        $message .= ' To insert into existing table, use the "--append" option.';
+      }
+
+      throw new RuntimeException($message);
     }
 
     $this->insertPreRun();
