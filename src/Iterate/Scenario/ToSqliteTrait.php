@@ -255,24 +255,23 @@ trait ToSqliteTrait {
    * Validates fields.
    *
    * @throws \Symfony\Component\Console\Exception\InvalidOptionException
-   *   If options contain non-existing or repeating (type) fields.
+   *   If options contain non-existing fields or non-unique type fields.
    */
   protected function validateFields(): void {
-    $fields = array_fill_keys($this->getFields(), FALSE);
+    $names = $this->getFields();
+    $fields = array_fill_keys($names, FALSE);
 
-    foreach ($this->getPrimary() as $field) {
-      if (!isset($fields[$field])) {
-        throw new InvalidOptionException('The "--primary" option contains non-existent field "' . $field . '".');
-      }
+    if ($diff = array_diff($this->getPrimary(), $names)) {
+      throw new InvalidOptionException('The "--primary" option contains non-existent field(s): ' . implode(', ', $diff) . '.');
     }
 
     foreach (['integer', 'blob', 'real', 'numeric', 'text'] as $type) {
+      if ($diff = array_diff($this->getOption($type, []), $names)) {
+        throw new InvalidOptionException('The "--' . $type . '" option contains non-existent field(s): ' . implode(', ', $diff) . '.');
+      }
       foreach ($this->getOption($type, []) as $field) {
-        if (!isset($fields[$field])) {
-          throw new InvalidOptionException('The "--' . $type . '" option contains non-existent field "' . $field . '".');
-        }
         if ($fields[$field] !== FALSE) {
-          throw new InvalidOptionException('Options "--' . $type . '" and "--' . $fields[$field] . '" both contain the same field "' . $field . '".');
+          throw new InvalidOptionException('Options "--' . $type . '" and "--' . $fields[$field] . '" both contain the same field ' . $field . '.');
         }
 
         $fields[$field] = $type;
