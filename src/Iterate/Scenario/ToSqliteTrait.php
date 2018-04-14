@@ -52,6 +52,13 @@ trait ToSqliteTrait {
   protected $filesystem;
 
   /**
+   * Primary key.
+   *
+   * @var string[]
+   */
+  protected $primary = [];
+
+  /**
    * Options.
    *
    * @var array
@@ -83,6 +90,21 @@ trait ToSqliteTrait {
    */
   public function setDestination(string $destination): ScenarioInterface {
     $this->destination = $destination;
+
+    return $this;
+  }
+
+  /**
+   * Sets the primary key.
+   *
+   * @param string[] $fields
+   *   Field names composing the primary key.
+   *
+   * @return $this|\Shiyan\Iterate\Scenario\ScenarioInterface
+   *   The called object.
+   */
+  public function setPrimary(array $fields): ScenarioInterface {
+    $this->primary = $fields;
 
     return $this;
   }
@@ -151,6 +173,18 @@ trait ToSqliteTrait {
     }
 
     return $this->table;
+  }
+
+  /**
+   * Gets the primary key.
+   *
+   * @return string[]
+   *   Field names composing the primary key.
+   */
+  protected function getPrimary(): array {
+    $this->primary = $this->getOption('primary', $this->primary);
+
+    return $this->primary;
   }
 
   /**
@@ -226,7 +260,7 @@ trait ToSqliteTrait {
   protected function validateFields(): void {
     $fields = array_fill_keys($this->getFields(), FALSE);
 
-    foreach ($this->getOption('primary', []) as $field) {
+    foreach ($this->getPrimary() as $field) {
       if (!isset($fields[$field])) {
         throw new InvalidOptionException('The "--primary" option contains non-existent field "' . $field . '".');
       }
@@ -299,12 +333,12 @@ trait ToSqliteTrait {
         $type = $field . ' ' . $type;
       });
 
-      $primaries = implode(', ', $this->getOption('primary', []));
-      if ($primaries !== '') {
-        $primaries = ', PRIMARY KEY (' . $primaries . ')';
+      $primary = implode(', ', $this->getPrimary());
+      if ($primary !== '') {
+        $primary = ', PRIMARY KEY (' . $primary . ')';
       }
 
-      $pdo->exec('CREATE TABLE ' . $this->getTable() . ' (' . implode(', ', $fields) . $primaries . ')');
+      $pdo->exec('CREATE TABLE ' . $this->getTable() . ' (' . implode(', ', $fields) . $primary . ')');
     }
     elseif (!$this->getOption('append')) {
       $message = 'Table exists in the destination database.';
